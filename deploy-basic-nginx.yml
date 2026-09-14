@@ -1,0 +1,43 @@
+# Deploy an NGINX server across 3 nodes and setup a MetalLB IP so we we can get to it from "outside"
+# Need to figure out persistent storage methods and mounting data into the container for a better experience.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        image: nginx:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    name: nginx-http
+    targetPort: 80
+    protocol: TCP
+  - port: 443
+    name: nginx-https
+    targetPort: 443
+    protocol: TCP
