@@ -1,5 +1,5 @@
 
-# This creates a 10GB PV/PVC for Jenkins home to use for persistent data. The drawdown is that it uses a path on each worker nodes filesystem as storage. i
+# This creates a 10GB PV/PVC for Jenkins home to use for persistent data. The drawdown is that it uses a path on each worker nodes filesystem as storage.
 # In my lab, I'm using NFS from a secondary disk on the ansible vm and exporting it to the worker nodes so they'll all have the same data when I scale the replicas up from 1 to 3 after initial setup.
 # If you're running your own DNS server, you'll need to make an A-Record for the ip given to it by MetalLB. FYI - it can be found with cmd: "kubectl get svc -n jenkins" look for a 192.168.1.x/24 address
 ---
