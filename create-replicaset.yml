@@ -1,0 +1,29 @@
+---
+# Note: This file is a compliment to the create-single-pod.yaml file because the matchLabels selector will match the pre-existing pod.
+# How this works:
+# 1. If theres a pod already running with the label "app=nginx" (can be found by running kubectl describe pod [podname] |grep -i label) then when this replicaset is created/applied it will take into account that there's already one pod running that matches this files criteria
+# 2. If you didn't run the create-single-pod.yaml file then this file will create 3 new pods or however many is defined in the "replicas" field.
+#
+# # Beware: Now that you have associated the single pod previously created with this new replicaset. If you ever delete the replicaset, it will delete the pods the replicaset made as well as the original single pod you made with the other file.
+#
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset-nginx
+  labels:
+    app: nginx
+spec:
+  template:
+    metadata:
+      name: nginx-pod
+      labels:
+        app: nginx
+    spec:
+      containers:
+       - name: replicaset-container
+         image: nginx
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
