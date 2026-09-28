@@ -1,0 +1,13 @@
+# Create a single pod with 1 container.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+    servertype: web
+spec:
+  containers:
+    - name: nginx-1
+      image: nginx:latest
