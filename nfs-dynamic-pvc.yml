@@ -1,0 +1,14 @@
+# Request 10gb from the NFS storageclass 
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+  namespace: mariadb       # Put your namespace here
+spec:
+  storageClassName: nfs-dynamic
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
