@@ -1,0 +1,150 @@
+
+# Create "gauacamole" namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: guacamole
+
+
+# Create Guacamole Database Deployment.
+# Runs 1 container called "guacamole-db" running PostgreSQL15
+# Mounts storage volume inside container at /var/lib/postgresql/data using the nfs-dynamic storageclass via PVC.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guacamole-db
+  namespace: guacamole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guacamole-db
+  template:
+    metadata:
+      labels:
+        app: guacamole-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: guacamole_db
+            - name: POSTGRES_USER
+              value: guacamole_user
+            - name: POSTGRES_PASSWORD
+              value: "ChooseAStrongPassword123!" # Change this!
+          ports:
+            - containerPort: 5432
+              name: dbport
+          volumeMounts:
+            - name: guacdb-nfs-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: guacdb-nfs-volume
+        persistentVolumeClaim:
+          claimName: guacamole-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guacamole-db
+  namespace: guacamole
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: guacamole-db
+
+
+
+
+# This is the section for the actual "guacd" service.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guacd
+  namespace: guacamole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guacd
+  template:
+    metadata:
+      labels:
+        app: guacd
+    spec:
+      containers:
+        - name: guacd
+          image: guacamole/guacd:latest
+          ports:
+            - containerPort: 4822
+              name: guacdport
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guacd
+  namespace: guacamole
+spec:
+  ports:
+    - port: 4822
+  selector:
+    app: guacd
+
+
+# This is the section for where the Guacamole Web service is built.
+# Runs 1 container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guacamole-frontend
+  namespace: guacamole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guacamole-frontend
+  template:
+    metadata:
+      labels:
+        app: guacamole-frontend
+    spec:
+      containers:
+        - name: guacamole
+          image: guacamole/guacamole:latest
+          env:
+            - name: GUACD_HOSTNAME
+              value: guac.lab.sanderson.com
+            - name: GUACD_PORT
+              value: "4822"
+            - name: POSTGRESQL_HOSTNAME
+              value: guacamole-db
+            - name: POSTGRESQL_DATABASE
+              value: guacamole_db
+            - name: POSTGRESQL_USER
+              value: guacamole_user
+            - name: POSTGRESQL_PASSWORD
+              value: "ChooseAStrongPassword123!" # Must match postgres deployment
+          ports:
+            - containerPort: 8080
+              name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guacamole-frontend-svc
+  namespace: guacamole
+spec:
+  type: LoadBalancer # Change to NodePort or LoadBalancer if needed for external access
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: guacamole-frontend
