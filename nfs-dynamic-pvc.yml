@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariadb-pvc
+  name: guac-pvc
   namespace: guac       # Put your namespace here
 spec:
   storageClassName: nfs-dynamic
